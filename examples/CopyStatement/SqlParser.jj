@@ -1,0 +1,185 @@
+options {
+  STATIC = false;
+}
+
+PARSER_BEGIN(SqlParser)
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+/** Simple brace matcher. */
+public class SqlParser {
+
+  String table_name;
+  ArrayList<String> column_names = new ArrayList<String>();
+  String file_path = new String();
+  boolean is_from = true;
+  String format = new String();
+  String delimiter = new String();
+  String nullStr = new String();
+  String quote = new String();
+  String escape = new String();
+  boolean header;
+
+  /** Main entry point. */
+  public static void main(String args[]) throws ParseException {
+    SqlParser parser = new SqlParser(System.in);
+    parser.Input();
+  }
+
+  public void run() throws ParseException, TokenMgrError {
+    Input();
+    if (format.isEmpty()) {
+      format = "TEXT";
+    }
+    if (delimiter.isEmpty()) {
+      if (format.equals("TEXT")) {
+        delimiter = "\t";
+      } else {
+        delimiter = ",";
+      }
+    }
+  }
+}
+PARSER_END(SqlParser)
+
+SKIP : { "\r" | "\n" | "\r\n" | "\\" | "\t" | " "}
+TOKEN [IGNORE_CASE]:
+{
+  <COPY :("COPY")>
+| <FROM :("FROM")>
+| <HEADER :("HEADER")>
+| <TO :("TO")>
+| <OBRA :("(")>
+| <CBRA :(")")>
+| <WITH :("WITH")>
+| <COMMA :(",")>
+| <FORMAT :("FORMAT")>
+| <STDIN :("STDIN")>
+| <STDOUT :("STDOUT")>
+| <NULL :("NULL")>
+| <QUOTE :("QUOTE")>
+| <ESCAPE :("ESCAPE")>
+| <TRUE :("TRUE" | "ON" | "1")>
+| <FALSE :("FALSE" | "OFF" | "0")>
+| <DELIMITER :("DELIMITER")>
+| <CSV_OR_TEXT_OR_BINARY :("CSV" | "TEXT" | "BINARY")>
+}
+
+TOKEN:
+{
+  <NAME :["a"-"z","A"-"Z","_"] (["a"-"z","A"-"Z","_","0"-"9"])*>
+| <ANY_CHAR : "\'" (~["\'"])+ "\'">
+}
+
+SPECIAL_TOKEN: {<COMMENT:("#")+ (<NAME>)+ ("#")+>}
+
+void Input() :
+{
+  Token table_token;
+}
+{
+  <COPY>
+  table_token = <NAME> {table_name = table_token.image;}
+  [column_names = ColumnNames()]
+  Destination()
+  [[<WITH>] <OBRA> Options() <CBRA>]
+  <EOF>
+}
+
+ArrayList<String> ColumnNames():
+{
+  Token col_token;
+  ArrayList<String> columns = new ArrayList<String>();
+}
+{
+  <OBRA>
+  (col_token = <NAME> {columns.add(col_token.image);})
+  (
+    <COMMA>
+    col_token = <NAME> {columns.add(col_token.image);}
+  )*
+  <CBRA>
+  {return columns;}
+}
+
+void Destination():
+{}
+{
+  ( <FROM> {is_from = true;}
+  | <TO> {is_from = false;}
+  )
+  ( <STDIN> {file_path = "STDIN";}
+  | <STDOUT> {file_path = "STDOUT";}
+  )
+}
+
+void Options():
+{}
+{
+  Option() (<COMMA> Option())*
+}
+
+void Option():
+{}
+{
+    Format()
+  | Delimiter()
+  | Header()
+  | Null()
+  | Quote()
+  | Escape()
+}
+
+void Format():
+{
+  Token format_token;
+}
+{
+  <FORMAT>
+  format_token = <CSV_OR_TEXT_OR_BINARY> {format = format_token.image;}
+}
+
+void Delimiter():
+{
+  Token delimiter_token;
+}
+{
+  <DELIMITER>
+  delimiter_token = <ANY_CHAR> {delimiter = delimiter_token.image;}
+}
+
+void Null():
+{
+  Token null_token;
+}
+{
+  <NULL>
+  null_token = <ANY_CHAR> {nullStr = null_token.image;}
+}
+
+void Escape():
+{
+  Token escape_token;
+}
+{
+  <ESCAPE>
+  escape_token = <ANY_CHAR> {escape = escape_token.image;}
+}
+
+void Quote():
+{
+  Token quote_token;
+}
+{
+  <QUOTE>
+  quote_token = <ANY_CHAR> {quote = quote_token.image;}
+}
+
+
+void Header():
+{}
+{
+  <HEADER> {header = true;}
+  [<TRUE> | <FALSE> {header = false;}]
+}
