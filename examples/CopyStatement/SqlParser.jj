@@ -7,7 +7,6 @@ PARSER_BEGIN(SqlParser)
 import java.util.ArrayList;
 import java.util.HashMap;
 
-/** Simple brace matcher. */
 public class SqlParser {
 
   String table_name;
