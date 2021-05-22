@@ -1,12 +1,12 @@
-<!---
+# <a name="top"></a>JavaCC
+
 Created from:
 * the original README file at https://github.com/javacc/javacc
 * the documentation https://github.com/javacc/javacc/www
 * an example README.md file from https://github.com/apache/flink
--->
 
-# <a name="top"></a>JavaCC
-
+[ADDED] Copy SQL Statment Parser at https://github.com/kaylaleung/javacc/tree/main/examples/CopyStatement
+ 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.java.dev.javacc/javacc/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.java.dev.javacc/javacc)
 [![Javadocs](https://www.javadoc.io/badge/net.java.dev.javacc/javacc.svg)](https://www.javadoc.io/doc/net.java.dev.javacc/javacc)
 
